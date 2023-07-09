@@ -1,6 +1,14 @@
+const bodyParser = require('body-parser')
 const express = require('express')
 const app = express()
 const port = 3001
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json())
+
 
 const USERS = [];
 
@@ -18,24 +26,42 @@ const SUBMISSION = [
 
 ]
 
-app.post('/signup', function(req, res) {
+app.get('/signup1', function(req, res) {
+  res.send("Hello worldss");
+})
+
+app.post('/signup', (req, res) => {
   // Add logic to decode body
   // body should have email and password
-
+  const {email, password } = req.body;
 
   //Store email and password (as is for now) in the USERS array above (only if the user with the given email doesnt exist)
+   const existingUsers = USERS.find(user => user.email === email);
+   if(existingUsers){
+    return res.status(400).send('User already exists.');
+   }
+
+   USERS.push({email, password});
 
 
   // return back 200 status code to the client
-  res.send('Hello World!')
+  res.sendStatus(200);
 })
 
 app.post('/login', function(req, res) {
   // Add logic to decode body
   // body should have email and password
+  const {email, password } = req.body;
 
   // Check if the user with the given email exists in the USERS array
   // Also ensure that the password is the same
+  const userExist = USERS.find(user => user.email === email);
+  if (userExist) {
+    const passwordCheck = USERS.find(user => user.email === email && user.password === password);
+    if (passwordCheck) {
+      return res.status(200).send("randomtoken");
+    }
+   }
 
 
   // If the password is the same, return back 200 status code to the client
@@ -43,7 +69,7 @@ app.post('/login', function(req, res) {
   // If the password is not the same, return back 401 status code to the client
 
 
-  res.send('Hello World from route 2!')
+  res.status(401).send('Email or password does not match');
 })
 
 app.get('/questions', function(req, res) {
