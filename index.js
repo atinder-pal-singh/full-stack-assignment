@@ -1,7 +1,39 @@
 const bodyParser = require('body-parser')
 const express = require('express')
+const crypto = require('crypto')
+const jwt = require('jsonwebtoken')
 const app = express()
 const port = 3001
+
+const secretKey = 'full-stack-developmentt';
+
+// function generateToken(length = 64) {
+//   return crypto.randomBytes(length).toString('hex');
+// }
+
+// function generateJWT(token) {
+//   return jwt.sign({ token }, secretKey);
+// }
+
+function verifyJWT(token) {
+  try {
+    const decoded = jwt.verify(token, secretKey);
+    return decoded.token;
+  } catch(err) {
+    return null;
+  }
+}
+
+function authenticateToken(req,res,next) {
+  const token = req.headers.authorization;
+  const verifiedToken = verifyJWT(token);
+
+  if (verifiedToken) {
+    next();
+  } else {
+    res.sendStatus(401);
+  }
+}
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
