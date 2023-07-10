@@ -7,17 +7,20 @@ const port = 3001
 
 const secretKey = 'full-stack-developmentt';
 
-// function generateToken(length = 64) {
-//   return crypto.randomBytes(length).toString('hex');
-// }
+function generateToken(length = 64) {
+  return crypto.randomBytes(length).toString('hex');
+}
 
-// function generateJWT(token) {
-//   return jwt.sign({ token }, secretKey);
-// }
+function generateJWT(token) {
+  return jwt.sign({ token }, secretKey, {expiresIn: '1h'});
+}
 
 function verifyJWT(token) {
   try {
-    const decoded = jwt.verify(token, secretKey);
+    const decoded = jwt.verify(token, secretKey, { algorithms: ['HS256']});
+    if (Date.now() >= decoded.exp * 1000) {
+      throw new Error('Token expired');
+    }
     return decoded.token;
   } catch(err) {
     return null;
@@ -91,7 +94,8 @@ app.post('/login', function(req, res) {
   if (userExist) {
     const passwordCheck = USERS.find(user => user.email === email && user.password === password);
     if (passwordCheck) {
-      return res.status(200).send("randomtoken");
+      let token = generateToken();
+      return res.status(200).send(generateJWT(token));
     }
    }
 
@@ -104,7 +108,7 @@ app.post('/login', function(req, res) {
   res.status(401).send('Email or password does not match');
 })
 
-app.get('/questions', function(req, res) {
+app.get('/questions', authenticateToken, function(req, res) {
 
   //return the user all the questions in the QUESTIONS array
   res.send("Hello World from route 3!")
